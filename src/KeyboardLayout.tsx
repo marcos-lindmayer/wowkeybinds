@@ -1,4 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+
+// Extend Navigator interface for Keyboard API
+declare global {
+  interface Navigator {
+    keyboard?: {
+      getLayoutMap(): Promise<Map<string, string>>;
+    };
+  }
+}
 
 interface KeyObject {
   id: string;
@@ -17,6 +26,8 @@ interface KeyboardLayoutProps {
 }
 
 const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, onKeyRemove, keybinds, getModifiedKeyId }) => {
+  const [keyboardLayout, setKeyboardLayout] = useState<KeyObject[][]>([]);
+
   const getModifierClass = (keyId: string) => {
     if (keyId.includes('shift+')) return 'shift-modifier';
     if (keyId.includes('ctrl+')) return 'ctrl-modifier';
@@ -43,8 +54,117 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
       onKeyRemove(keyId);
     }
   };
-  const keys: KeyObject[][] = [
-    // Row 1: F-keys
+
+  const generateKeyboardLayout = async () => {
+    try {
+      if (navigator.keyboard?.getLayoutMap) {
+        const layoutMap = await navigator.keyboard.getLayoutMap();
+        const dynamicKeys = generateDynamicLayout(layoutMap);
+        setKeyboardLayout(dynamicKeys);
+      } else {
+        setKeyboardLayout(getDefaultLayout());
+      }
+    } catch (error) {
+      setKeyboardLayout(getDefaultLayout());
+    }
+  };
+
+  const generateDynamicLayout = (layoutMap: Map<string, string>): KeyObject[][] => {
+    const getKeyLabel = (code: string, fallback: string) => {
+      return layoutMap.get(code) || fallback;
+    };
+
+    return [
+      [
+        { id: 'esc', label: 'Esc' },
+        { id: 'f1', label: 'F1', ml: true },
+        { id: 'f2', label: 'F2' },
+        { id: 'f3', label: 'F3' },
+        { id: 'f4', label: 'F4' },
+        { id: 'f5', label: 'F5', ml: true },
+        { id: 'f6', label: 'F6' },
+        { id: 'f7', label: 'F7' },
+        { id: 'f8', label: 'F8' },
+        { id: 'f9', label: 'F9', ml: true },
+        { id: 'f10', label: 'F10' },
+        { id: 'f11', label: 'F11' },
+        { id: 'f12', label: 'F12' }
+      ],
+      [
+        { id: 'tilde', label: getKeyLabel('Backquote', '~') },
+        { id: '1', label: getKeyLabel('Digit1', '1') },
+        { id: '2', label: getKeyLabel('Digit2', '2') },
+        { id: '3', label: getKeyLabel('Digit3', '3') },
+        { id: '4', label: getKeyLabel('Digit4', '4') },
+        { id: '5', label: getKeyLabel('Digit5', '5') },
+        { id: '6', label: getKeyLabel('Digit6', '6') },
+        { id: '7', label: getKeyLabel('Digit7', '7') },
+        { id: '8', label: getKeyLabel('Digit8', '8') },
+        { id: '9', label: getKeyLabel('Digit9', '9') },
+        { id: '0', label: getKeyLabel('Digit0', '0') },
+        { id: 'minus', label: getKeyLabel('Minus', '-') },
+        { id: 'equals', label: getKeyLabel('Equal', '=') },
+        { id: 'backspace', label: 'Backspace', wide: true }
+      ],
+      [
+        { id: 'tab', label: 'Tab', wide: true },
+        { id: 'q', label: getKeyLabel('KeyQ', 'Q') },
+        { id: 'w', label: getKeyLabel('KeyW', 'W') },
+        { id: 'e', label: getKeyLabel('KeyE', 'E') },
+        { id: 'r', label: getKeyLabel('KeyR', 'R') },
+        { id: 't', label: getKeyLabel('KeyT', 'T') },
+        { id: 'y', label: getKeyLabel('KeyY', 'Y') },
+        { id: 'u', label: getKeyLabel('KeyU', 'U') },
+        { id: 'i', label: getKeyLabel('KeyI', 'I') },
+        { id: 'o', label: getKeyLabel('KeyO', 'O') },
+        { id: 'p', label: getKeyLabel('KeyP', 'P') },
+        { id: 'open-bracket', label: getKeyLabel('BracketLeft', '[') },
+        { id: 'close-bracket', label: getKeyLabel('BracketRight', ']') },
+        { id: 'backslash', label: getKeyLabel('Backslash', '\\') }
+      ],
+      [
+        { id: 'caps', label: 'Caps Lock', wide: true },
+        { id: 'a', label: getKeyLabel('KeyA', 'A') },
+        { id: 's', label: getKeyLabel('KeyS', 'S') },
+        { id: 'd', label: getKeyLabel('KeyD', 'D') },
+        { id: 'f', label: getKeyLabel('KeyF', 'F') },
+        { id: 'g', label: getKeyLabel('KeyG', 'G') },
+        { id: 'h', label: getKeyLabel('KeyH', 'H') },
+        { id: 'j', label: getKeyLabel('KeyJ', 'J') },
+        { id: 'k', label: getKeyLabel('KeyK', 'K') },
+        { id: 'l', label: getKeyLabel('KeyL', 'L') },
+        { id: 'semicolon', label: getKeyLabel('Semicolon', ';') },
+        { id: 'apostrophe', label: getKeyLabel('Quote', "'") },
+        { id: 'enter', label: 'Enter', wide: true }
+      ],
+      [
+        { id: 'shift-left', label: 'Shift', wide: true },
+        { id: 'z', label: getKeyLabel('KeyZ', 'Z') },
+        { id: 'x', label: getKeyLabel('KeyX', 'X') },
+        { id: 'c', label: getKeyLabel('KeyC', 'C') },
+        { id: 'v', label: getKeyLabel('KeyV', 'V') },
+        { id: 'b', label: getKeyLabel('KeyB', 'B') },
+        { id: 'n', label: getKeyLabel('KeyN', 'N') },
+        { id: 'm', label: getKeyLabel('KeyM', 'M') },
+        { id: 'comma', label: getKeyLabel('Comma', ',') },
+        { id: 'period', label: getKeyLabel('Period', '.') },
+        { id: 'slash', label: getKeyLabel('Slash', '/') },
+        { id: 'shift-right', label: 'Shift', wide: true }
+      ],
+      [
+        { id: 'ctrl-left', label: 'Ctrl' },
+        { id: 'win', label: 'Win' },
+        { id: 'alt-left', label: 'Alt' },
+        { id: 'space', label: 'Space', extraWide: true },
+        { id: 'alt-right', label: 'Alt' },
+        { id: 'fn', label: 'Fn' },
+        { id: 'menu', label: 'Menu' },
+        { id: 'ctrl-right', label: 'Ctrl' }
+      ]
+    ];
+  };
+
+  const getDefaultLayout = (): KeyObject[][] => [
     [
       { id: 'esc', label: 'Esc' },
       { id: 'f1', label: 'F1', ml: true },
@@ -60,7 +180,6 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
       { id: 'f11', label: 'F11' },
       { id: 'f12', label: 'F12' }
     ],
-    // Row 2: Numbers
     [
       { id: 'tilde', label: '~' },
       { id: '1', label: '1' },
@@ -77,7 +196,6 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
       { id: 'equals', label: '=' },
       { id: 'backspace', label: 'Backspace', wide: true }
     ],
-    // Row 3: QWERTY
     [
       { id: 'tab', label: 'Tab', wide: true },
       { id: 'q', label: 'Q' },
@@ -94,7 +212,6 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
       { id: 'close-bracket', label: ']' },
       { id: 'backslash', label: '\\' }
     ],
-    // Row 4: ASDF
     [
       { id: 'caps', label: 'Caps Lock', wide: true },
       { id: 'a', label: 'A' },
@@ -110,7 +227,6 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
       { id: 'apostrophe', label: "'" },
       { id: 'enter', label: 'Enter', wide: true }
     ],
-    // Row 5: ZXCV
     [
       { id: 'shift-left', label: 'Shift', wide: true },
       { id: 'z', label: 'Z' },
@@ -125,7 +241,6 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
       { id: 'slash', label: '/' },
       { id: 'shift-right', label: 'Shift', wide: true }
     ],
-    // Row 6: Bottom row
     [
       { id: 'ctrl-left', label: 'Ctrl' },
       { id: 'win', label: 'Win' },
@@ -137,6 +252,12 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
       { id: 'ctrl-right', label: 'Ctrl' }
     ]
   ];
+
+  useEffect(() => {
+    generateKeyboardLayout();
+  }, []);
+
+  const keys = keyboardLayout.length > 0 ? keyboardLayout : getDefaultLayout();
 
   return (
     <div className="keyboard-layout">
