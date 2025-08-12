@@ -240,6 +240,33 @@ body {
   background: #2ea043;
 }
 
+.key-bound.shift-modifier {
+  background: #da3633;
+  border-color: #f85149;
+}
+
+.key-bound.shift-modifier:hover {
+  background: #f85149;
+}
+
+.key-bound.ctrl-modifier {
+  background: #9a6700;
+  border-color: #d29922;
+}
+
+.key-bound.ctrl-modifier:hover {
+  background: #d29922;
+}
+
+.key-bound.alt-modifier {
+  background: #8250df;
+  border-color: #a475f9;
+}
+
+.key-bound.alt-modifier:hover {
+  background: #a475f9;
+}
+
 .key-icon {
   width: 18px;
   height: 18px;
@@ -254,9 +281,34 @@ body {
 
 .controls {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.controls-row {
+  display: flex;
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.controls-section {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  background: #161b22;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+}
+
+.controls-label {
+  color: #8b949e;
+  font-size: 12px;
+  font-weight: 600;
+  margin-right: 4px;
 }
 
 .button-style {
@@ -488,6 +540,21 @@ body {
   color: #ffffff;
 }
 
+.mouse-button.key-bound.shift-modifier {
+  background: #da3633;
+  border-color: #f85149;
+}
+
+.mouse-button.key-bound.ctrl-modifier {
+  background: #9a6700;
+  border-color: #d29922;
+}
+
+.mouse-button.key-bound.alt-modifier {
+  background: #8250df;
+  border-color: #a475f9;
+}
+
 .mouse-left {
   grid-column: 1;
   grid-row: 1;
@@ -610,6 +677,21 @@ body {
   color: #ffffff;
 }
 
+.extra-button.key-bound.shift-modifier {
+  background: #da3633;
+  border-color: #f85149;
+}
+
+.extra-button.key-bound.ctrl-modifier {
+  background: #9a6700;
+  border-color: #d29922;
+}
+
+.extra-button.key-bound.alt-modifier {
+  background: #8250df;
+  border-color: #a475f9;
+}
+
 .extra-button-label {
   font-size: 7px;
   margin-top: 2px;
@@ -655,4 +737,56 @@ body {
 .profile-select:focus {
   outline: none;
   border-color: #58a6ff;
+}
+
+.share-section, .share-import-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #30363d;
+}
+
+.share-section label, .share-import-section label {
+  display: block;
+  margin-bottom: 8px;
+  color: #c9d1d9;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.share-section .form-textarea, .share-import-section .form-textarea {
+  min-height: 10px;
+  height: 10px !important;
+  transform: translateY(10px);
+}
+
+.instructions {
+  margin-top: 16px;
+  padding: 12px;
+  background: #161b22;
+  border-radius: 6px;
+  border: 1px solid #30363d;
+}
+
+.instructions h3 {
+  color: #58a6ff;
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.instructions ul {
+  margin: 0;
+  padding-left: 16px;
+  color: #8b949e;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.instructions li {
+  margin-bottom: 4px;
+}
+
+.instructions .warning {
+  color: #f85149;
+  font-weight: 500;
 }

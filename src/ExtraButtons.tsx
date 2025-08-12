@@ -12,6 +12,14 @@ interface ExtraButtonsProps {
 
 const ExtraButtons: React.FC<ExtraButtonsProps> = ({ onKeyClick, onKeyDrop, onKeyRemove, keybinds, getModifiedKeyId, customLabels, setCustomLabels }) => {
   const [editingButton, setEditingButton] = useState<string | null>(null);
+  
+  const getModifierClass = (keyId: string) => {
+    if (keyId.includes('shift+')) return 'shift-modifier';
+    if (keyId.includes('ctrl+')) return 'ctrl-modifier';
+    if (keyId.includes('alt+')) return 'alt-modifier';
+    return '';
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
@@ -60,10 +68,11 @@ const ExtraButtons: React.FC<ExtraButtonsProps> = ({ onKeyClick, onKeyDrop, onKe
       <div className="extra-buttons-grid">
         {extraButtons.map((button) => {
           const modifiedKeyId = getModifiedKeyId(button.id);
+          const modifierClass = getModifierClass(modifiedKeyId);
           return (
             <div
               key={button.id}
-              className={`extra-button ${keybinds[modifiedKeyId] ? 'key-bound' : ''}`}
+              className={`extra-button ${keybinds[modifiedKeyId] ? 'key-bound' : ''} ${modifierClass}`}
               onClick={(e) => handleButtonClick(e, button.id)}
               onContextMenu={(e) => handleRightClick(e, button.id)}
               onDragOver={handleDragOver}

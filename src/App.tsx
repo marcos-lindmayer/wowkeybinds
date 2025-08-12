@@ -107,11 +107,45 @@ const App: React.FC = () => {
     }
   }, [selectedExpansion, selectedClass, currentProfile, profiles]);
 
-  // Add keyboard event listener
+  // Add keyboard event listeners
   React.useEffect(() => {
-    document.addEventListener('keydown', handleKeyPress);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Toggle modifier states when keys are pressed
+      if (event.key === 'Shift') {
+        setShiftModifier(true);
+        return;
+      }
+      if (event.key === 'Control') {
+        setCtrlModifier(true);
+        return;
+      }
+      if (event.key === 'Alt') {
+        setAltModifier(true);
+        return;
+      }
+      
+      // Handle spell binding
+      handleKeyPress(event);
+    };
+    
+    const handleKeyUp = (event: KeyboardEvent) => {
+      // Release modifier states when keys are released
+      if (event.key === 'Shift') {
+        setShiftModifier(false);
+      }
+      if (event.key === 'Control') {
+        setCtrlModifier(false);
+      }
+      if (event.key === 'Alt') {
+        setAltModifier(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
     return () => {
-      document.removeEventListener('keydown', handleKeyPress);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
     };
   }, [handleKeyPress]);
 
@@ -152,10 +186,24 @@ const App: React.FC = () => {
     setKeybinds({});
   };
 
-  const saveConfig = (name: string, description: string) => {
+  const saveConfig = (name: string, description: string, download?: boolean) => {
     const config = { name, description, keybinds, expansion: selectedExpansion, customLabels };
     setSavedConfigs(prev => [...prev, config]);
     localStorage.setItem('wowKeybinds', JSON.stringify([...savedConfigs, config]));
+    
+    if (download) {
+      const dataStr = JSON.stringify(config, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${name.replace(/[^a-z0-9]/gi, '_')}_keybinds.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+    
     setModalOpen(false);
   };
 
@@ -210,6 +258,22 @@ const App: React.FC = () => {
       setCustomLabels(classData.customLabels || {});
     }
     setCurrentProfile(profileName);
+  };
+
+  const generateShareString = () => {
+    const config = { name: 'Shared Config', keybinds, expansion: selectedExpansion, customLabels };
+    const jsonString = JSON.stringify(config);
+    return btoa(jsonString);
+  };
+
+  const importShareString = (shareString: string) => {
+    try {
+      const jsonString = atob(shareString);
+      const config = JSON.parse(jsonString);
+      loadConfig(config);
+    } catch (error) {
+      alert('Invalid share string');
+    }
   };
 
   return (
@@ -307,47 +371,73 @@ const App: React.FC = () => {
           </div>
           
           <div className="controls">
-            <div className="profile-controls">
-              <select 
-                value={currentProfile} 
-                onChange={(e) => loadProfile(e.target.value)}
-                className="profile-select"
-              >
-                <option value="">Select Profile</option>
-                {profiles.map(profile => (
-                  <option key={profile.name} value={profile.name}>
-                    {profile.name}
-                  </option>
-                ))}
-              </select>
-              <button 
-                onClick={() => setProfileModalOpen(true)} 
-                className="button-style"
-              >
-                Save Profile
-              </button>
+            <div className="controls-row">
+              <div className="controls-section">
+                <span className="controls-label">Profile:</span>
+                <select 
+                  value={currentProfile} 
+                  onChange={(e) => loadProfile(e.target.value)}
+                  className="profile-select"
+                >
+                  <option value="">Select Profile</option>
+                  {profiles.map(profile => (
+                    <option key={profile.name} value={profile.name}>
+                      {profile.name}
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  onClick={() => setProfileModalOpen(true)} 
+                  className="button-style"
+                >
+                  Save Profile
+                </button>
+              </div>
             </div>
-            <button onClick={clearAllKeybinds} className="button-style">Clear All Keybinds</button>
-            <button 
-              onClick={() => setShiftModifier(!shiftModifier)} 
-              className={`button-style ${shiftModifier ? 'active' : ''}`}
-            >
-              Shift
-            </button>
-            <button 
-              onClick={() => setCtrlModifier(!ctrlModifier)} 
-              className={`button-style ${ctrlModifier ? 'active' : ''}`}
-            >
-              Ctrl
-            </button>
-            <button 
-              onClick={() => setAltModifier(!altModifier)} 
-              className={`button-style ${altModifier ? 'active' : ''}`}
-            >
-              Alt
-            </button>
-            <button onClick={() => { setModalMode('save'); setModalOpen(true); }} className="button-style">Save Configuration</button>
-            <button onClick={() => { setModalMode('load'); setModalOpen(true); }} className="button-style">Load Configuration</button>
+            
+            <div className="controls-row">
+              <div className="controls-section">
+                <span className="controls-label">Modifiers:</span>
+                <button 
+                  onClick={() => setShiftModifier(!shiftModifier)} 
+                  className={`button-style ${shiftModifier ? 'active' : ''}`}
+                >
+                  Shift
+                </button>
+                <button 
+                  onClick={() => setCtrlModifier(!ctrlModifier)} 
+                  className={`button-style ${ctrlModifier ? 'active' : ''}`}
+                >
+                  Ctrl
+                </button>
+                <button 
+                  onClick={() => setAltModifier(!altModifier)} 
+                  className={`button-style ${altModifier ? 'active' : ''}`}
+                >
+                  Alt
+                </button>
+              </div>
+              
+              <div className="controls-section">
+                <span className="controls-label">Actions:</span>
+                <button onClick={clearAllKeybinds} className="button-style">Clear All</button>
+                <button onClick={() => { setModalMode('save'); setModalOpen(true); }} className="button-style">Save Config</button>
+                <button onClick={() => { setModalMode('load'); setModalOpen(true); }} className="button-style">Load Config</button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="instructions">
+            <h3>Instructions & Tips</h3>
+            <ul>
+              <li>Click a spell, then click a key to bind it</li>
+              <li>Right-click any bound key to remove the binding</li>
+              <li>Drag and drop spells directly onto keys</li>
+              <li>Hold modifier keys (Shift/Ctrl/Alt) to toggle them automatically</li>
+              <li className="warning">Avoid Ctrl+W, Ctrl+T, Ctrl+R - these will close/refresh your browser tab</li>
+              <li className="warning">Avoid Alt+F4 - this will close your browser window</li>
+              <li>Color coding: Green = no modifier, Red = Shift, Orange = Ctrl, Purple = Alt</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -359,6 +449,8 @@ const App: React.FC = () => {
         onSave={saveConfig}
         onLoad={loadConfig}
         onImport={importConfig}
+        onGenerateShare={generateShareString}
+        onImportShare={importShareString}
         savedConfigs={savedConfigs}
       />
 

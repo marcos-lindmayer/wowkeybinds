@@ -17,6 +17,13 @@ interface KeyboardLayoutProps {
 }
 
 const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, onKeyRemove, keybinds, getModifiedKeyId }) => {
+  const getModifierClass = (keyId: string) => {
+    if (keyId.includes('shift+')) return 'shift-modifier';
+    if (keyId.includes('ctrl+')) return 'ctrl-modifier';
+    if (keyId.includes('alt+')) return 'alt-modifier';
+    return '';
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
@@ -139,10 +146,11 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
           <div key={rowIndex} className="keyboard-row">
             {row.map((key) => {
               const modifiedKeyId = getModifiedKeyId(key.id);
+              const modifierClass = getModifierClass(modifiedKeyId);
               return (
                 <div
                   key={key.id}
-                  className={`key ${key.wide ? 'key-wide' : ''} ${key.extraWide ? 'key-extra-wide' : ''} ${key.ml ? 'key-ml' : ''} ${keybinds[modifiedKeyId] ? 'key-bound' : ''}`}
+                  className={`key ${key.wide ? 'key-wide' : ''} ${key.extraWide ? 'key-extra-wide' : ''} ${key.ml ? 'key-ml' : ''} ${keybinds[modifiedKeyId] ? 'key-bound' : ''} ${modifierClass}`}
                   onClick={() => onKeyClick(key.id)}
                   onContextMenu={(e) => handleRightClick(e, key.id)}
                   onDragOver={handleDragOver}

@@ -9,6 +9,13 @@ interface MouseLayoutProps {
 }
 
 const MouseLayout: React.FC<MouseLayoutProps> = ({ onKeyClick, onKeyDrop, onKeyRemove, keybinds, getModifiedKeyId }) => {
+  const getModifierClass = (keyId: string) => {
+    if (keyId.includes('shift+')) return 'shift-modifier';
+    if (keyId.includes('ctrl+')) return 'ctrl-modifier';
+    if (keyId.includes('alt+')) return 'alt-modifier';
+    return '';
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
@@ -44,10 +51,11 @@ const MouseLayout: React.FC<MouseLayoutProps> = ({ onKeyClick, onKeyDrop, onKeyR
         <div className="mouse-visual">
           {mouseButtons.map((button) => {
             const modifiedKeyId = getModifiedKeyId(button.id);
+            const modifierClass = getModifierClass(modifiedKeyId);
             return (
               <div
                 key={button.id}
-                className={`mouse-button ${button.id} ${keybinds[modifiedKeyId] ? 'key-bound' : ''}`}
+                className={`mouse-button ${button.id} ${keybinds[modifiedKeyId] ? 'key-bound' : ''} ${modifierClass}`}
                 onClick={() => onKeyClick(button.id)}
                 onContextMenu={(e) => handleRightClick(e, button.id)}
                 onDragOver={handleDragOver}
