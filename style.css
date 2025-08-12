@@ -201,3 +201,236 @@ h1, h2 {
 .key-num-enter { height: 75px; align-self: start; }
 .key-num-plus { height: 106px; } /* Adjust num-plus height to span two rows */
 .key-num-0 { width: 108px; } /* Adjust num-0 width */
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background-color: #272d3b;
+    border-radius: 15px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+    border: 1px solid #3c445a;
+}
+
+.modal-header {
+    background-color: #3b4252;
+    padding: 20px;
+    border-radius: 15px 15px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #3c445a;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #e0e6ed;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    color: #e0e6ed;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.close-button:hover {
+    background-color: #5a647d;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.config-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.config-form.hidden {
+    display: none;
+}
+
+.form-input, .form-textarea {
+    background-color: #3b4252;
+    color: #e0e6ed;
+    border: 2px solid #5a647d;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: #ffda47;
+    box-shadow: 0 0 0 3px rgba(255, 218, 71, 0.2);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.button-style-secondary {
+    background-color: #5a647d;
+    background-image: linear-gradient(to bottom, #6a748c, #5a647d);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-out;
+    cursor: pointer;
+    border: 2px solid #7a8499;
+    margin: 0 5px;
+    box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.1), 0 4px 10px rgba(0, 0, 0, 0.3);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.button-style-secondary:hover {
+    background-color: #6a748c;
+    background-image: linear-gradient(to bottom, #7a8499, #6a748c);
+    transform: translateY(-1px);
+}
+
+.config-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #3c445a;
+    border-radius: 8px;
+    background-color: #3b4252;
+}
+
+.config-item {
+    padding: 15px;
+    border-bottom: 1px solid #3c445a;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    transition: background-color 0.2s;
+}
+
+.config-item:hover {
+    background-color: #4a5163;
+}
+
+.config-item:last-child {
+    border-bottom: none;
+}
+
+.config-info {
+    flex-grow: 1;
+    margin-right: 15px;
+}
+
+.config-name {
+    font-weight: bold;
+    color: #ffda47;
+    margin-bottom: 5px;
+}
+
+.config-details {
+    font-size: 0.9rem;
+    color: #b8c5d1;
+    line-height: 1.4;
+}
+
+.config-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.config-button {
+    background-color: #8d6200;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    white-space: nowrap;
+}
+
+.config-button:hover {
+    background-color: #b38d00;
+}
+
+.config-button.delete {
+    background-color: #8b2635;
+}
+
+.config-button.delete:hover {
+    background-color: #a73142;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Improved button spacing */
+.button-style {
+    margin: 5px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .form-buttons {
+        flex-direction: column;
+    }
+    
+    .config-actions {
+        flex-direction: row;
+        gap: 5px;
+    }
+    
+    .config-button {
+        font-size: 0.8rem;
+        padding: 5px 8px;
+    }
+}

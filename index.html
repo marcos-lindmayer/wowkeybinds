@@ -39,6 +39,7 @@
                 <!-- Available Spells List -->
                 <div class="spell-list">
                     <h2 class="text-2xl font-bold mb-4 text-white">Available Spells</h2>
+                    <input type="text" id="spell-search" placeholder="Search spells..." class="w-full p-2 mb-4 rounded border border-gray-300 text-black">
                     <div id="spell-container" class="flex flex-col gap-3">
                         <!-- Spells will be loaded here dynamically from spells.json -->
                     </div>
@@ -151,12 +152,47 @@
                 <div class="text-center mt-6">
                     <button id="clear-all-keybinds" class="button-style">Clear All Keybinds</button>
                     <button id="shift-modifier-button" class="button-style">Shift Modifier</button>
+                    <button id="save-config-button" class="button-style">Save Configuration</button>
+                    <button id="load-config-button" class="button-style">Load Configuration</button>
+                </div>
+                
+                <!-- Save/Load Modal -->
+                <div id="config-modal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="modal-title">Configuration Manager</h3>
+                            <button id="close-modal" class="close-button">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Save Configuration Form -->
+                            <div id="save-form" class="config-form hidden">
+                                <input type="text" id="config-name" placeholder="Configuration name" class="form-input">
+                                <textarea id="config-description" placeholder="Description (optional)" class="form-textarea"></textarea>
+                                <div class="form-buttons">
+                                    <button id="save-confirm" class="button-style">Save</button>
+                                    <button id="save-cancel" class="button-style-secondary">Cancel</button>
+                                </div>
+                            </div>
+                            
+                            <!-- Load Configuration List -->
+                            <div id="load-form" class="config-form hidden">
+                                <div id="config-list" class="config-list"></div>
+                                <div class="form-buttons">
+                                    <button id="import-config" class="button-style">Import File</button>
+                                    <input type="file" id="import-file" accept=".json" class="hidden">
+                                    <button id="load-cancel" class="button-style-secondary">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Link to external JavaScript file -->
+    <!-- Link to external JavaScript files -->
+    <script src="keybind-storage.js" defer></script>
+    <script src="modifier-system.js" defer></script>
     <script src="script.js" defer></script>
 </body>
 </html>

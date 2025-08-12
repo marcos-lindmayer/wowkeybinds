@@ -5,24 +5,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const shiftModifierButton = document.getElementById('shift-modifier-button');
     const expansionSelect = document.getElementById('expansion-select'); // New: Get the expansion select dropdown
     const classSelect = document.getElementById('class-select');
+    const spellSearch = document.getElementById('spell-search');
 
     let draggedSpell = null;
-    let shiftActive = false;
     let allSpellsData = {}; // Stores all spells nested by expansion and class
     let currentSelectedExpansion = ''; // Track currently selected expansion
+    let keybindManager = null; // Will be initialized after KeybindManager is loaded
+    let modifierSystem = null; // Will be initialized after ModifierSystem is loaded
 
-    // Function to update a key's display based on current shift state and bound spells
+    // Function to update a key's display based on current modifier state and bound spells
     function updateKeyDisplay(keyElement) {
         const baseKeyText = keyElement.dataset.originalKeyText;
         let spellImageUrlToShow = '';
         let spellNameToShow = '';
         let prefix = '';
 
-        if (shiftActive) {
-            if (keyElement.dataset.boundShiftSpellImageUrl && keyElement.dataset.boundShiftSpellName) {
-                spellImageUrlToShow = keyElement.dataset.boundShiftSpellImageUrl;
-                spellNameToShow = keyElement.dataset.boundShiftSpellName;
-                prefix = 'Shift + ';
+        if (modifierSystem && modifierSystem.hasActiveModifiers()) {
+            const modifierSuffix = modifierSystem.getModifierDatasetSuffix();
+            const modifierPrefix = modifierSystem.getActiveModifierString();
+            
+            if (keyElement.dataset[`bound${modifierSuffix}SpellImageUrl`] && keyElement.dataset[`bound${modifierSuffix}SpellName`]) {
+                spellImageUrlToShow = keyElement.dataset[`bound${modifierSuffix}SpellImageUrl`];
+                spellNameToShow = keyElement.dataset[`bound${modifierSuffix}SpellName`];
+                prefix = modifierPrefix;
             } else if (keyElement.dataset.boundSpellImageUrl && keyElement.dataset.boundSpellName) {
                 spellImageUrlToShow = keyElement.dataset.boundSpellImageUrl;
                 spellNameToShow = keyElement.dataset.boundSpellName;
@@ -40,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img src="${spellImageUrlToShow}" alt="${prefix}${baseKeyText} - ${spellNameToShow}" class="key-spell-icon" onerror="this.onerror=null;this.src='https://placehold.co/30x30/4A5568/CBD5E0?text=NO+ICON';">
             `;
         } else {
-            keyElement.innerHTML = baseKeyText; // Keep key blank if no spell is bound
+            keyElement.innerHTML = baseKeyText;
         }
     }
 
@@ -114,6 +119,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Function to filter spells based on search input
+    function filterSpells() {
+        const searchTerm = spellSearch.value.toLowerCase();
+        const spells = spellContainer.querySelectorAll('.spell');
+        
+        spells.forEach(spell => {
+            const spellName = spell.dataset.spellName.toLowerCase();
+            spell.style.display = spellName.includes(searchTerm) ? '' : 'none';
+        });
+    }
+
     // Function to initialize expansion and class dropdowns and load initial spells
     async function initializeExpansionAndClassSelection() {
         try {
@@ -141,6 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 populateSpellsForClass(e.target.value);
             });
 
+            // Add event listener for spell search
+            spellSearch.addEventListener('input', filterSpells);
+
             // Automatically select the first expansion if available
             if (Object.keys(allSpellsData).length > 0) {
                 expansionSelect.value = Object.keys(allSpellsData)[0];
@@ -159,13 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Toggle Shift Modifier Button Functionality
-    shiftModifierButton.addEventListener('click', () => {
-        shiftActive = !shiftActive;
-        shiftModifierButton.classList.toggle('active-modifier-button', shiftActive);
-        shiftModifierButton.textContent = shiftActive ? 'Shift Active' : 'Shift Modifier';
-        keys.forEach(updateKeyDisplay);
-    });
+    // Legacy shift button will be replaced by modifier system
 
     // Handle key drop (target for spells)
     keys.forEach(key => {
@@ -188,9 +201,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const spellImageUrl = e.dataTransfer.getData('text/spell-image-url');
                 const droppedSpell = document.getElementById(spellId);
 
-                let targetBoundSpellIdDataset = shiftActive ? 'boundShiftSpellId' : 'boundSpellId';
-                let targetBoundSpellNameDataset = shiftActive ? 'boundShiftSpellName' : 'boundSpellName';
-                let targetBoundSpellImageUrlDataset = shiftActive ? 'boundShiftSpellImageUrl' : 'boundSpellImageUrl';
+                let modifierSuffix = modifierSystem.hasActiveModifiers() ? modifierSystem.getModifierDatasetSuffix() : '';
+                let targetBoundSpellIdDataset = `bound${modifierSuffix}SpellId`;
+                let targetBoundSpellNameDataset = `bound${modifierSuffix}SpellName`;
+                let targetBoundSpellImageUrlDataset = `bound${modifierSuffix}SpellImageUrl`;
 
                 if (key.dataset[targetBoundSpellIdDataset]) {
                     const currentSpellIdOnKey = key.dataset[targetBoundSpellIdDataset];
@@ -213,9 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Add a double-click listener to remove a spell from a key
         key.addEventListener('dblclick', () => {
-            let targetBoundSpellIdDataset = shiftActive ? 'boundShiftSpellId' : 'boundSpellId';
-            let targetBoundSpellNameDataset = shiftActive ? 'boundShiftSpellName' : 'boundSpellName';
-            let targetBoundSpellImageUrlDataset = shiftActive ? 'boundShiftSpellImageUrl' : 'boundSpellImageUrl';
+            let modifierSuffix = modifierSystem.hasActiveModifiers() ? modifierSystem.getModifierDatasetSuffix() : '';
+            let targetBoundSpellIdDataset = `bound${modifierSuffix}SpellId`;
+            let targetBoundSpellNameDataset = `bound${modifierSuffix}SpellName`;
+            let targetBoundSpellImageUrlDataset = `bound${modifierSuffix}SpellImageUrl`;
 
             if (key.dataset[targetBoundSpellIdDataset]) {
                 const boundSpellId = key.dataset[targetBoundSpellIdDataset];
@@ -238,28 +253,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear All Keybinds Button Functionality
     function clearAllKeybinds() {
         keys.forEach(key => {
-            // Check and clear normal binding
-            if (key.dataset.boundSpellId) {
-                const spellToReturn = document.getElementById(key.dataset.boundSpellId);
-                if (spellToReturn) {
-                    spellToReturn.style.display = '';
-                    spellContainer.appendChild(spellToReturn);
+            // Clear all possible modifier combinations
+            const modifierCombinations = ['', 'Shift', 'Ctrl', 'Alt', 'CtrlShift', 'CtrlAlt', 'AltShift', 'CtrlAltShift'];
+            
+            modifierCombinations.forEach(modifier => {
+                const spellIdKey = `bound${modifier}SpellId`;
+                const spellNameKey = `bound${modifier}SpellName`;
+                const spellImageKey = `bound${modifier}SpellImageUrl`;
+                
+                if (key.dataset[spellIdKey]) {
+                    const spellToReturn = document.getElementById(key.dataset[spellIdKey]);
+                    if (spellToReturn) {
+                        spellToReturn.style.display = '';
+                        spellContainer.appendChild(spellToReturn);
+                    }
+                    delete key.dataset[spellIdKey];
+                    delete key.dataset[spellNameKey];
+                    delete key.dataset[spellImageKey];
                 }
-                delete key.dataset.boundSpellId;
-                delete key.dataset.boundSpellName;
-                delete key.dataset.boundSpellImageUrl;
-            }
-            // Check and clear shift binding
-            if (key.dataset.boundShiftSpellId) {
-                const spellToReturn = document.getElementById(key.dataset.boundShiftSpellId);
-                if (spellToReturn) {
-                    spellToReturn.style.display = '';
-                    spellContainer.appendChild(spellToReturn);
-                }
-                delete key.dataset.boundShiftSpellId;
-                delete key.dataset.boundShiftSpellName;
-                delete key.dataset.boundShiftSpellImageUrl;
-            }
+            });
+            
             updateKeyDisplay(key);
         });
     }
@@ -273,6 +286,193 @@ document.addEventListener('DOMContentLoaded', () => {
         updateKeyDisplay(key);
     });
 
+    // Initialize systems
+    keybindManager = new KeybindManager();
+    modifierSystem = new ModifierSystem();
+    modifierSystem.initialize();
+    
+    // Set up modifier change callback
+    modifierSystem.onModifierChange = () => {
+        keys.forEach(updateKeyDisplay);
+    };
+    
+    // Make updateKeyDisplay globally available for keybind manager
+    window.updateKeyDisplay = updateKeyDisplay;
+    
+    // Initialize save/load functionality
+    initializeSaveLoadSystem();
+    
     // Load expansions and initial class/spells when the DOM is ready
     initializeExpansionAndClassSelection();
+    
+    // Save/Load System Functions
+    function initializeSaveLoadSystem() {
+        const saveButton = document.getElementById('save-config-button');
+        const loadButton = document.getElementById('load-config-button');
+        const modal = document.getElementById('config-modal');
+        const closeModal = document.getElementById('close-modal');
+        const saveForm = document.getElementById('save-form');
+        const loadForm = document.getElementById('load-form');
+        const modalTitle = document.getElementById('modal-title');
+        
+        // Save configuration button
+        saveButton.addEventListener('click', () => {
+            modalTitle.textContent = 'Save Configuration';
+            saveForm.classList.remove('hidden');
+            loadForm.classList.add('hidden');
+            modal.classList.remove('hidden');
+            document.getElementById('config-name').focus();
+        });
+        
+        // Load configuration button
+        loadButton.addEventListener('click', () => {
+            modalTitle.textContent = 'Load Configuration';
+            loadForm.classList.remove('hidden');
+            saveForm.classList.add('hidden');
+            modal.classList.remove('hidden');
+            populateConfigList();
+        });
+        
+        // Close modal
+        closeModal.addEventListener('click', closeConfigModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeConfigModal();
+        });
+        
+        // Save form handlers
+        document.getElementById('save-confirm').addEventListener('click', handleSaveConfig);
+        document.getElementById('save-cancel').addEventListener('click', closeConfigModal);
+        document.getElementById('load-cancel').addEventListener('click', closeConfigModal);
+        
+        // Import file handler
+        document.getElementById('import-config').addEventListener('click', () => {
+            document.getElementById('import-file').click();
+        });
+        
+        document.getElementById('import-file').addEventListener('change', handleImportConfig);
+        
+        // Enter key to save
+        document.getElementById('config-name').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSaveConfig();
+        });
+    }
+    
+    function closeConfigModal() {
+        const modal = document.getElementById('config-modal');
+        modal.classList.add('hidden');
+        
+        // Clear form inputs
+        document.getElementById('config-name').value = '';
+        document.getElementById('config-description').value = '';
+    }
+    
+    function handleSaveConfig() {
+        const name = document.getElementById('config-name').value.trim();
+        const description = document.getElementById('config-description').value.trim();
+        
+        if (!name) {
+            alert('Please enter a configuration name.');
+            return;
+        }
+        
+        const expansion = document.getElementById('expansion-select').value;
+        const className = document.getElementById('class-select').value;
+        
+        if (!expansion || !className) {
+            alert('Please select an expansion and class before saving.');
+            return;
+        }
+        
+        try {
+            keybindManager.saveConfiguration(name, description);
+            alert(`Configuration "${name}" saved successfully!`);
+            closeConfigModal();
+        } catch (error) {
+            alert('Error saving configuration: ' + error.message);
+        }
+    }
+    
+    function populateConfigList() {
+        const configList = document.getElementById('config-list');
+        const savedConfigs = keybindManager.getSavedConfigurations();
+        
+        configList.innerHTML = '';
+        
+        if (Object.keys(savedConfigs).length === 0) {
+            configList.innerHTML = '<div class="config-item"><div class="config-info">No saved configurations found.</div></div>';
+            return;
+        }
+        
+        for (const [name, config] of Object.entries(savedConfigs)) {
+            const configItem = document.createElement('div');
+            configItem.className = 'config-item';
+            
+            const keybindCount = Object.keys(config.keybinds || {}).length;
+            const timestamp = new Date(config.timestamp).toLocaleDateString();
+            
+            configItem.innerHTML = `
+                <div class="config-info">
+                    <div class="config-name">${name}</div>
+                    <div class="config-details">
+                        ${config.expansion} - ${config.class}<br>
+                        ${keybindCount} keybinds • Saved ${timestamp}<br>
+                        ${config.description || 'No description'}
+                    </div>
+                </div>
+                <div class="config-actions">
+                    <button class="config-button" onclick="loadConfig('${name}')">Load</button>
+                    <button class="config-button" onclick="exportConfig('${name}')">Export</button>
+                    <button class="config-button delete" onclick="deleteConfig('${name}')">Delete</button>
+                </div>
+            `;
+            
+            configList.appendChild(configItem);
+        }
+    }
+    
+    function handleImportConfig(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        keybindManager.importConfiguration(file)
+            .then((configName) => {
+                alert(`Configuration "${configName}" imported successfully!`);
+                populateConfigList();
+                event.target.value = ''; // Clear file input
+            })
+            .catch((error) => {
+                alert('Error importing configuration: ' + error.message);
+                event.target.value = ''; // Clear file input
+            });
+    }
+    
+    // Global functions for config list buttons
+    window.loadConfig = function(name) {
+        if (keybindManager.loadConfiguration(name)) {
+            closeConfigModal();
+            setTimeout(() => {
+                alert(`Configuration "${name}" loaded successfully!`);
+            }, 1000);
+        } else {
+            alert('Error loading configuration.');
+        }
+    };
+    
+    window.exportConfig = function(name) {
+        if (keybindManager.exportConfiguration(name)) {
+            // Export successful - file download initiated
+        } else {
+            alert('Error exporting configuration.');
+        }
+    };
+    
+    window.deleteConfig = function(name) {
+        if (confirm(`Are you sure you want to delete the configuration "${name}"?`)) {
+            keybindManager.deleteConfiguration(name);
+            populateConfigList();
+            alert(`Configuration "${name}" deleted.`);
+        }
+    };
 });
+
+// This ICON_MAP is no longer needed as spells.json now contains the imageUrls directly
