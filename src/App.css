@@ -148,6 +148,32 @@ body {
   border: 1px solid #30363d;
 }
 
+@media (max-width: 768px) {
+  .app {
+    overflow: auto  ;
+  }
+  .main-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .spells-panel,
+  .keyboard-panel {
+    flex: none;
+    margin: 4px;
+  }
+  
+  .input-layouts {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .right-panel {
+    flex: none;
+  }
+}
+
 .spells-panel {
   flex: 1;
   overflow-y: auto;

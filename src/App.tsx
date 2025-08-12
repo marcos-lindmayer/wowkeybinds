@@ -430,7 +430,7 @@ const App: React.FC = () => {
           <div className="instructions">
             <h3>Instructions & Tips</h3>
             <ul>
-              <li>Click a spell, then click a key to bind it</li>
+              <li>Click a spell, then press a key to bind it</li>
               <li>Right-click any bound key to remove the binding</li>
               <li>Drag and drop spells directly onto keys</li>
               <li>Hold modifier keys (Shift/Ctrl/Alt) to toggle them automatically</li>
