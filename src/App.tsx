@@ -39,6 +39,59 @@ const App: React.FC = () => {
     }
   }, [selectedExpansion, classes, selectedClass]);
 
+  const getModifiedKeyId = (keyId: string) => {
+    let modifiedKey = keyId;
+    if (ctrlModifier) modifiedKey = `ctrl+${modifiedKey}`;
+    if (altModifier) modifiedKey = `alt+${modifiedKey}`;
+    if (shiftModifier) modifiedKey = `shift+${modifiedKey}`;
+    return modifiedKey;
+  };
+
+  const handleKeyPress = React.useCallback((event: KeyboardEvent) => {
+    if (!selectedSpell) return;
+    
+    // Prevent default behavior for certain keys
+    event.preventDefault();
+    
+    // Map special keys to their display names
+    const keyMap: { [key: string]: string } = {
+      ' ': 'space',
+      'ArrowUp': 'up',
+      'ArrowDown': 'down',
+      'ArrowLeft': 'left',
+      'ArrowRight': 'right',
+      'Enter': 'enter',
+      'Escape': 'esc',
+      'Tab': 'tab',
+      'Backspace': 'backspace',
+      'Delete': 'delete',
+      'Insert': 'insert',
+      'Home': 'home',
+      'End': 'end',
+      'PageUp': 'pageup',
+      'PageDown': 'pagedown'
+    };
+    
+    let keyId = keyMap[event.key] || event.key.toLowerCase();
+    
+    // Handle function keys
+    if (event.key.startsWith('F') && event.key.length <= 3) {
+      keyId = event.key.toLowerCase();
+    }
+    
+    // Handle number pad
+    if (event.code.startsWith('Numpad')) {
+      keyId = `num${event.code.slice(6).toLowerCase()}`;
+    }
+    
+    // Build the modified key ID
+    const modifiedKeyId = getModifiedKeyId(keyId);
+    
+    // Bind the spell to the key
+    setKeybinds(prev => ({ ...prev, [modifiedKeyId]: selectedSpell }));
+    setSelectedSpell(null);
+  }, [selectedSpell, getModifiedKeyId]);
+
   // Auto-load profile data when switching class/expansion
   React.useEffect(() => {
     if (currentProfile && selectedClass) {
@@ -54,20 +107,20 @@ const App: React.FC = () => {
     }
   }, [selectedExpansion, selectedClass, currentProfile, profiles]);
 
+  // Add keyboard event listener
+  React.useEffect(() => {
+    document.addEventListener('keydown', handleKeyPress);
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [handleKeyPress]);
+
   // Filter spells based on search term
   const filteredSpells = selectedClass && spells[selectedExpansion][selectedClass] 
     ? spells[selectedExpansion][selectedClass].filter(spell => 
         spell.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : [];
-
-  const getModifiedKeyId = (keyId: string) => {
-    let modifiedKey = keyId;
-    if (ctrlModifier) modifiedKey = `ctrl+${modifiedKey}`;
-    if (altModifier) modifiedKey = `alt+${modifiedKey}`;
-    if (shiftModifier) modifiedKey = `shift+${modifiedKey}`;
-    return modifiedKey;
-  };
 
   const handleSpellClick = (spell: Spell) => {
     setSelectedSpell(spell);
