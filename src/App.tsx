@@ -27,6 +27,7 @@ const App: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'save' | 'load'>('save');
   const [savedConfigs, setSavedConfigs] = useState<any[]>([]);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const expansions = Object.keys(spells);
   const classes = selectedExpansion ? Object.keys(spells[selectedExpansion]).filter(c => c !== 'General') : [];
@@ -184,6 +185,11 @@ const App: React.FC = () => {
 
   const clearAllKeybinds = () => {
     setKeybinds({});
+    setShowClearConfirm(false);
+  };
+
+  const handleClearAllClick = () => {
+    setShowClearConfirm(true);
   };
 
   const saveConfig = (name: string, description: string, download?: boolean) => {
@@ -420,7 +426,7 @@ const App: React.FC = () => {
               
               <div className="controls-section">
                 <span className="controls-label">Actions:</span>
-                <button onClick={clearAllKeybinds} className="button-style">Clear All</button>
+                <button onClick={handleClearAllClick} className="button-style">Clear All</button>
                 <button onClick={() => { setModalMode('save'); setModalOpen(true); }} className="button-style">Save Config</button>
                 <button onClick={() => { setModalMode('load'); setModalOpen(true); }} className="button-style">Load Config</button>
               </div>
@@ -460,6 +466,24 @@ const App: React.FC = () => {
         onSave={saveProfile}
         profiles={profiles}
       />
+
+      {showClearConfirm && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ width: '320px' }}>
+            <div className="modal-header">
+              <h2>Clear All Keybinds</h2>
+              <button className="close-button" onClick={() => setShowClearConfirm(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ margin: '0 0 16px 0', color: '#c9d1d9' }}>Are you sure you want to clear all keybinds? This action cannot be undone.</p>
+              <div className="form-buttons">
+                <button className="button-secondary" onClick={() => setShowClearConfirm(false)}>Cancel</button>
+                <button className="button-primary" onClick={clearAllKeybinds} style={{ background: '#da3633', borderColor: '#f85149' }}>Clear All</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
