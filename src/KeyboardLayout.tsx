@@ -29,9 +29,17 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
   const [keyboardLayout, setKeyboardLayout] = useState<KeyObject[][]>([]);
 
   const getModifierClass = (keyId: string) => {
-    if (keyId.includes('shift+')) return 'shift-modifier';
-    if (keyId.includes('ctrl+')) return 'ctrl-modifier';
-    if (keyId.includes('alt+')) return 'alt-modifier';
+    const hasShift = keyId.includes('shift+');
+    const hasCtrl = keyId.includes('ctrl+');
+    const hasAlt = keyId.includes('alt+');
+    
+    if (hasShift && hasCtrl && hasAlt) return 'shift-ctrl-alt-modifier';
+    if (hasShift && hasCtrl) return 'shift-ctrl-modifier';
+    if (hasShift && hasAlt) return 'shift-alt-modifier';
+    if (hasCtrl && hasAlt) return 'ctrl-alt-modifier';
+    if (hasShift) return 'shift-modifier';
+    if (hasCtrl) return 'ctrl-modifier';
+    if (hasAlt) return 'alt-modifier';
     return '';
   };
 
@@ -42,16 +50,30 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
   const handleDrop = (e: React.DragEvent, keyId: string) => {
     e.preventDefault();
     const spellData = e.dataTransfer.getData('application/json');
+    const sourceKeyId = e.dataTransfer.getData('text/plain');
     if (spellData) {
       const spell = JSON.parse(spellData);
       onKeyDrop(keyId, spell);
+      // Remove from source key if dragging between keys
+      if (sourceKeyId && sourceKeyId !== getModifiedKeyId(keyId)) {
+        onKeyRemove(sourceKeyId.replace(/^(shift\+|ctrl\+|alt\+)/, ''));
+      }
     }
   };
 
   const handleRightClick = (e: React.MouseEvent, keyId: string) => {
     e.preventDefault();
-    if (keybinds[keyId]) {
+    const modifiedKeyId = getModifiedKeyId(keyId);
+    if (keybinds[modifiedKeyId]) {
       onKeyRemove(keyId);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, keyId: string) => {
+    const modifiedKeyId = getModifiedKeyId(keyId);
+    if (keybinds[modifiedKeyId]) {
+      e.dataTransfer.setData('application/json', JSON.stringify(keybinds[modifiedKeyId]));
+      e.dataTransfer.setData('text/plain', modifiedKeyId);
     }
   };
 
@@ -267,21 +289,35 @@ const KeyboardLayout: React.FC<KeyboardLayoutProps> = ({ onKeyClick, onKeyDrop, 
           <div key={rowIndex} className="keyboard-row">
             {row.map((key) => {
               const modifiedKeyId = getModifiedKeyId(key.id);
+              const baseKeyId = key.id;
               const modifierClass = getModifierClass(modifiedKeyId);
+              const hasModifiedBind = !!keybinds[modifiedKeyId];
+              const hasBaseBind = !!keybinds[baseKeyId];
+              const showFallback = !hasModifiedBind && hasBaseBind && modifiedKeyId !== baseKeyId;
+              
               return (
                 <div
                   key={key.id}
-                  className={`key ${key.wide ? 'key-wide' : ''} ${key.extraWide ? 'key-extra-wide' : ''} ${key.ml ? 'key-ml' : ''} ${keybinds[modifiedKeyId] ? 'key-bound' : ''} ${modifierClass}`}
+                  className={`key ${key.wide ? 'key-wide' : ''} ${key.extraWide ? 'key-extra-wide' : ''} ${key.ml ? 'key-ml' : ''} ${hasModifiedBind ? 'key-bound' : ''} ${modifierClass}`}
                   onClick={() => onKeyClick(key.id)}
                   onContextMenu={(e) => handleRightClick(e, key.id)}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, key.id)}
+                  draggable={hasModifiedBind}
+                  onDragStart={(e) => handleDragStart(e, key.id)}
                 >
-                  {keybinds[modifiedKeyId] && (
+                  {hasModifiedBind && (
                     <img 
                       src={keybinds[modifiedKeyId].imageUrl} 
                       alt={keybinds[modifiedKeyId].name} 
                       className="key-icon"
+                    />
+                  )}
+                  {showFallback && (
+                    <img 
+                      src={keybinds[baseKeyId].imageUrl} 
+                      alt={keybinds[baseKeyId].name} 
+                      className="key-icon fallback"
                     />
                   )}
                   <span className="key-label">{key.label}</span>

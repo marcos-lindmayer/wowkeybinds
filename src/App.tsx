@@ -402,23 +402,31 @@ const App: React.FC = () => {
             </div>
             
             <div className="controls-row">
-              <div className="controls-section">
+              <div className={`controls-section ${
+                shiftModifier && ctrlModifier && altModifier ? 'shift-ctrl-alt' :
+                shiftModifier && ctrlModifier ? 'shift-ctrl' :
+                shiftModifier && altModifier ? 'shift-alt' :
+                ctrlModifier && altModifier ? 'ctrl-alt' : ''
+              }`}>
                 <span className="controls-label">Modifiers:</span>
                 <button 
                   onClick={() => setShiftModifier(!shiftModifier)} 
                   className={`button-style ${shiftModifier ? 'active' : ''}`}
+                  data-modifier="shift"
                 >
                   Shift
                 </button>
                 <button 
                   onClick={() => setCtrlModifier(!ctrlModifier)} 
                   className={`button-style ${ctrlModifier ? 'active' : ''}`}
+                  data-modifier="ctrl"
                 >
                   Ctrl
                 </button>
                 <button 
                   onClick={() => setAltModifier(!altModifier)} 
                   className={`button-style ${altModifier ? 'active' : ''}`}
+                  data-modifier="alt"
                 >
                   Alt
                 </button>
@@ -442,7 +450,6 @@ const App: React.FC = () => {
               <li>Hold modifier keys (Shift/Ctrl/Alt) to toggle them automatically</li>
               <li className="warning">Avoid Ctrl+W, Ctrl+T, Ctrl+R - these will close/refresh your browser tab</li>
               <li className="warning">Avoid Alt+F4 - this will close your browser window</li>
-              <li>Color coding: Green = no modifier, Red = Shift, Orange = Ctrl, Purple = Alt</li>
             </ul>
           </div>
         </div>

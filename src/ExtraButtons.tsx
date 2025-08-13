@@ -14,9 +14,17 @@ const ExtraButtons: React.FC<ExtraButtonsProps> = ({ onKeyClick, onKeyDrop, onKe
   const [editingButton, setEditingButton] = useState<string | null>(null);
   
   const getModifierClass = (keyId: string) => {
-    if (keyId.includes('shift+')) return 'shift-modifier';
-    if (keyId.includes('ctrl+')) return 'ctrl-modifier';
-    if (keyId.includes('alt+')) return 'alt-modifier';
+    const hasShift = keyId.includes('shift+');
+    const hasCtrl = keyId.includes('ctrl+');
+    const hasAlt = keyId.includes('alt+');
+    
+    if (hasShift && hasCtrl && hasAlt) return 'shift-ctrl-alt-modifier';
+    if (hasShift && hasCtrl) return 'shift-ctrl-modifier';
+    if (hasShift && hasAlt) return 'shift-alt-modifier';
+    if (hasCtrl && hasAlt) return 'ctrl-alt-modifier';
+    if (hasShift) return 'shift-modifier';
+    if (hasCtrl) return 'ctrl-modifier';
+    if (hasAlt) return 'alt-modifier';
     return '';
   };
 
@@ -35,8 +43,17 @@ const ExtraButtons: React.FC<ExtraButtonsProps> = ({ onKeyClick, onKeyDrop, onKe
 
   const handleRightClick = (e: React.MouseEvent, keyId: string) => {
     e.preventDefault();
-    if (keybinds[keyId]) {
+    const modifiedKeyId = getModifiedKeyId(keyId);
+    if (keybinds[modifiedKeyId]) {
       onKeyRemove(keyId);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, keyId: string) => {
+    const modifiedKeyId = getModifiedKeyId(keyId);
+    if (keybinds[modifiedKeyId]) {
+      e.dataTransfer.setData('application/json', JSON.stringify(keybinds[modifiedKeyId]));
+      e.dataTransfer.setData('text/plain', modifiedKeyId);
     }
   };
 
@@ -68,21 +85,35 @@ const ExtraButtons: React.FC<ExtraButtonsProps> = ({ onKeyClick, onKeyDrop, onKe
       <div className="extra-buttons-grid">
         {extraButtons.map((button) => {
           const modifiedKeyId = getModifiedKeyId(button.id);
+          const baseKeyId = button.id;
           const modifierClass = getModifierClass(modifiedKeyId);
+          const hasModifiedBind = !!keybinds[modifiedKeyId];
+          const hasBaseBind = !!keybinds[baseKeyId];
+          const showFallback = !hasModifiedBind && hasBaseBind && modifiedKeyId !== baseKeyId;
+          
           return (
             <div
               key={button.id}
-              className={`extra-button ${keybinds[modifiedKeyId] ? 'key-bound' : ''} ${modifierClass}`}
+              className={`extra-button ${hasModifiedBind ? 'key-bound' : ''} ${modifierClass}`}
               onClick={(e) => handleButtonClick(e, button.id)}
               onContextMenu={(e) => handleRightClick(e, button.id)}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, button.id)}
+              draggable={hasModifiedBind}
+              onDragStart={(e) => handleDragStart(e, button.id)}
             >
-              {keybinds[modifiedKeyId] && (
+              {hasModifiedBind && (
                 <img 
                   src={keybinds[modifiedKeyId].imageUrl} 
                   alt={keybinds[modifiedKeyId].name} 
                   className="key-icon"
+                />
+              )}
+              {showFallback && (
+                <img 
+                  src={keybinds[baseKeyId].imageUrl} 
+                  alt={keybinds[baseKeyId].name} 
+                  className="key-icon fallback"
                 />
               )}
               {editingButton === button.id ? (
